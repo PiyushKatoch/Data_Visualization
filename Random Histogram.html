@@ -1,0 +1,147 @@
+﻿<html>
+<head>
+<title>Random Histogram Generation</title>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.bar rect {
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #999999;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+</head>
+<body>
+<h1 style="align-content:center "> Random Histogram Generated </h1>
+<h2>Random sample of 20 numbers taken without replacement from {1,2,3,...,100}</h2>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" >
+
+    var color = "steelblue";
+    var color_hover = "Orange";
+
+    function RandomNumber(min,max) {
+        randomindex = Math.floor(Math.random() * (max-min+1)) + 1;
+        let res = a[randomindex];
+        a.splice(randomindex, 1)
+        return res;
+    }
+    function ArrCreation() {
+        let arr = []
+        for (let i = 1; i <= 100; i++) {
+            arr.push(i);
+        }
+        return arr;
+    }
+    let a = ArrCreation();
+
+// Generate a 20 random data points between 1 to 100
+    var values = d3.range(20).map(function () {
+        return RandomNumber(0, a.length - 1);
+    });
+
+// A formatter for counts.
+var formatCount = d3.format(",.0f");
+
+var margin = {top: 20, right: 30, bottom: 30, left: 30},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+
+var x = d3.scale.linear()
+      .domain([0,100])
+      .range([0, width]);
+
+// Generate a histogram using twenty uniformly-spaced bins.
+var data = d3.layout.histogram()
+    .bins(x.ticks(10))
+     (values);
+
+var yMax = d3.max(data, function (d) { return d.length });
+var yMin = d3.min(data, function (d) { return d.length });
+
+
+var colorScale = d3.scale.linear()
+         .domain([yMax, yMin])
+        .range([d3.rgb(color).brighter(), d3.rgb(color).darker()]);
+
+var colorScale_hover = d3.scale.linear()
+        .domain([yMax, yMin])
+        .range([d3.rgb(color_hover).brighter(), d3.rgb(color_hover).darker()]);
+
+var y = d3.scale.linear()
+    .domain([0, yMax])
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var bar = svg.selectAll(".bar")
+     .data(data)
+     .enter().append("g")
+     .attr("class", "bar")
+     .attr("transform", function (d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+    
+
+
+bar.append("rect")
+    .attr("x", 1)
+    .attr("width", (x(data[0].dx) - x(0)) - 1)
+    .attr("height", function(d) { return height - y(d.y); })
+        .attr("fill", function (d) { return colorScale(d.y) });
+
+    bar.on("mouseover", function () {
+        bar.append("rect")
+            .attr("x", 1)
+            .attr("width", (x(data[0].dx) - x(0)) - 1)
+            .attr("height", function (d) { return height - y(d.y); })
+        d3.select(this)
+            .attr("fill", function (d) { return colorScale_hover(d.y); });
+    });
+    bar.on("mouseout", function () {
+        bar.append("rect")
+            .attr("x", 1)
+            .attr("width", (x(data[0].dx) - x(0)) - 1)
+            .attr("height", function (d) { return height - y(d.y); })
+            .attr("fill", function (d) { return colorScale(d.y) });
+    });
+
+
+bar.append("text")
+    .attr("dy", ".75em")
+    .attr("y", -12)
+    .attr("x", (x(data[0].dx) - x(0)) / 2)
+    .attr("text-anchor", "middle")
+    .text(function(d) { return formatCount(d.y); });
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+
+
+    
+</script>
+</body>
+</html>
